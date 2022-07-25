@@ -22,8 +22,8 @@ pub struct Lbfgsb<'a>{
     l:Vec<c_double>,
     u:Vec<c_double>,
     nbd:Vec<c_long>,
-    f:&'a dyn Fn(&Vec<c_double>)->c_double,
-    g:&'a dyn Fn(&Vec<c_double>)->Vec<c_double>,
+    f:&'a mut dyn FnMut(&Vec<c_double>)->c_double,
+    g:&'a mut dyn FnMut(&Vec<c_double>)->Vec<c_double>,
     factr:c_double,
     pgtol:c_double,
     wa:Vec<c_double>,
@@ -39,7 +39,7 @@ pub struct Lbfgsb<'a>{
 #[allow(dead_code, unused_assignments)]
 impl<'a> Lbfgsb<'a>{
     //constructor requres three mendatory parameter which is the initial solution, function and the gradient function
-    pub fn new(xvec:&'a mut Vec<c_double>,func:&'a dyn Fn(&Vec<c_double>)->c_double,gd:&'a dyn Fn(&Vec<c_double>)->Vec<c_double>)->Self{
+    pub fn new(xvec:&'a mut Vec<c_double>,func:&'a mut dyn FnMut(&Vec<c_double>)->c_double,gd:&'a mut dyn FnMut(&Vec<c_double>)->Vec<c_double>)->Self{
         let len = xvec.len() as c_long;
         //creating lbfgs struct
         Lbfgsb{n:len,m:5,x:xvec,l:vec![0.0f64;len as usize],u:vec![0.0f64;len as usize],nbd:vec![0;len as usize],f:func,g:gd,
@@ -51,8 +51,8 @@ impl<'a> Lbfgsb<'a>{
     pub fn minimize(&mut self) -> Option<ConvergenceTypes>{
         let mut fval = 0.0f64;
         let mut gval = vec![0.0f64;self.x.len()];
-        let func = self.f;
-        let grad = self.g;
+        let func = &mut self.f;
+        let grad = &mut self.g;
        //start of the loop
        loop{
            //callign the fortran routine
